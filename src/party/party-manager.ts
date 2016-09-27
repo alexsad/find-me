@@ -17,64 +17,120 @@ class PartyManager{
 		});
 	}
 
+	public join(player:IPlayer):void{
+		player.color = "";
+		player.deck = [];
+		player.status = EPlayerStatus.WAITING;
+		player.score = 0;
+
+		if(playerStore.get().length===0){
+			player.status = EPlayerStatus.PICKING;
+			this.storytellerId = player.id;
+		}
+
+		playerStore.add(player);
+		console.log(`player ${player.name} has connected!`);
+		this.onUpdate.emit(null);
+	}
+
 	//apostando
 	public betCard(playerId:string,cardId:number):void{
 		let player = playerStore.getById(playerId);
-	    player.pickedBet = cardId;
-	    console.log(`${player.name} has bet card ${cardId}`);
-	    player.status = EPlayerStatus.WAITING;
-	    this.doDiscard(cardId,player);
+		if(player.status===EPlayerStatus.BETING){
+		    player.pickedBet = cardId;
+		    console.log(`${player.name} has bet card ${cardId}`);
+		    player.status = EPlayerStatus.WAITING;
+		    this.doDiscard(cardId,player);
+
+		    let hasInBet:boolean = playerStore
+			    .get()
+			    .some(
+			    	player_tmp=>
+			    		player_tmp.status===EPlayerStatus.BETING &&	player_tmp.id!==this.storytellerId
+			    	);
+			//console.log(hasInBet);
+			if(!hasInBet){
+
+				this.processBets();
+
+				//qualcular e escolher o proximo storyteller
+				let nextIndex:number = 0;
+				playerStore
+					.get()
+					.some((p,indx)=>{
+						nextIndex=indx+1;
+						return p.id===this.storytellerId;
+					});
+				if(nextIndex===playerStore.get().length-1){
+					nextIndex=0;
+				};
+				this.storytellerId = playerStore.get()[nextIndex].id;
+				let nexStoryTeller = playerStore.getById(this.storytellerId);
+				nexStoryTeller.status = EPlayerStatus.PICKING;
+				console.log(`next storyteller ${nexStoryTeller.name}`);
+				
+				playerStore.get().forEach((p)=>{
+					p.deck.push(cardStore.getNewCard());
+				});
+			}
+
+		}
 		this.onUpdate.emit(null);
 	}
 	//trolando
 	public discardCard(playerId:string,cardId:number):void{
 		let player = playerStore.getById(playerId);
-	    player.pickedCard = cardId;
-	    console.log(`${player.name} has discard card ${cardId}`);
-	    player.status = EPlayerStatus.WAITING;
-	    this.doDiscard(cardId,player);
+		if(player.status===EPlayerStatus.DISCARDING){			
+		    player.pickedCard = cardId;
+		    console.log(`${player.name} has discard card ${cardId}`);
+		    player.status = EPlayerStatus.WAITING;
+		    this.doDiscard(cardId,player);
 
-	    let allPlayerDiscarded:boolean = playerStore.get().every((playerToDiscard)=>playerToDiscard.status===EPlayerStatus.WAITING);
-	    console.log(allPlayerDiscarded);
-	    if(allPlayerDiscarded){
-	    	//every player has discarded
-	    	let betCards:number[] = [];
-	    	playerStore
-	    		.get()
-	    		//.filter(playerReady=>playerReady.id!==this.storytellerId)
-	    		.forEach((playerReady)=>{
-	    			if(playerReady.id!==this.storytellerId){
-	    				playerReady.status=EPlayerStatus.BETING;
-	    			};	    			
-	    			betCards.push(playerReady.pickedCard);
-
-	    		});
-
-
-	    	this.onCardsBet.emit(cardStore.get().filter((card)=> betCards.indexOf(card.id) > -1 ));
+		    let allPlayerDiscarded:boolean = playerStore.get().every((playerToDiscard)=>playerToDiscard.status===EPlayerStatus.WAITING);
+		    //console.log(allPlayerDiscarded);
+		    if(allPlayerDiscarded){
+		    	//every player has discarded
+		    	let betCards:number[] = [];
+		    	playerStore
+		    		.get()
+		    		//.filter(playerReady=>playerReady.id!==this.storytellerId)
+		    		.forEach((playerReady)=>{
+		    			if(playerReady.id!==this.storytellerId){
+		    				playerReady.status=EPlayerStatus.BETING;
+		    			};	    			
+		    			betCards.push(playerReady.pickedCard);
+		    		});
+		    	this.onCardsBet.emit(this.shuffleCards(cardStore.get().filter((card)=> betCards.indexOf(card.id) > -1 )));
+		    }
 	    }
-
 		this.onUpdate.emit(null);
+	}
+	private shuffleCards(cards:ICard[]):ICard[] {
+	    for (var i = cards.length - 1; i > 0; i--) {
+	        var j = Math.floor(Math.random() * (i + 1));
+	        var temp = cards[i];
+	        cards[i] = cards[j];
+	        cards[j] = temp;
+	    }
+    	return cards;
 	}
 	//narrador escolhendo uma carta
 	public pickCard(playerId:string,cardId:number):void{
 	    let player = playerStore.getById(playerId);
-	    player.pickedCard = cardId;
-	    console.log(`${player.name} has picked card ${cardId}`);
-
-	    // Let others players pick cards
-	    if (this.storytellerId === player.id) {
-	      console.log("Allow other players to pick cards");
-	      for (let p of playerStore.get()) {
-	        if (p.id !== player.id){
-	        	p.status = EPlayerStatus.DISCARDING;
-	        };
-	      }
-	    }
-	    player.status = EPlayerStatus.WAITING;
-
-	    this.doDiscard(cardId,player);
-
+	    if(player.status===EPlayerStatus.PICKING&&player.id===this.storytellerId){
+		    player.pickedCard = cardId;
+		    console.log(`${player.name} has picked card ${cardId}`);
+		    // Let others players pick cards
+		    if (this.storytellerId === player.id) {
+		      console.log("Allow other players to pick cards");
+		      playerStore
+		      		.get()
+		      		.filter((p)=>p.id !== player.id)
+		      		.forEach(p=>p.status = EPlayerStatus.DISCARDING);
+		    }
+		    player.status = EPlayerStatus.WAITING;
+		    this.doDiscard(cardId,player);
+		}
 	    this.onUpdate.emit(null);
 	}
 
@@ -93,7 +149,50 @@ class PartyManager{
 	    	player.deck.splice(indxStotytellerCard,1);
 	    };
 	}
+	private processBets() {
+	    let storyteller =  playerStore.getById(this.storytellerId);
+	    let playerByCard = {};
+	    let winners:IPlayer[] = [];
+	    playerStore.get().forEach((p)=>{
+	    	//console.log(p.pickedCard);
+			playerByCard[p.pickedCard]=p;
+	    });
 
+	    //console.log(storyteller)
+
+	    playerStore.get().forEach((p1)=>{
+	      if (p1.id !== this.storytellerId){
+		      let p2 = playerByCard[p1.pickedBet];
+		      //console.log(p2);
+		      if (p2){
+			      if (p2.id === this.storytellerId){
+			      	winners.push(p1);
+			      }else if (p1.id !== p2.id){
+			      	// ignore voting on own card
+			      	p2.score++
+			      };
+		      };
+	      }
+
+	    });
+	    /*
+	     * If nobody or everybody finds the correct picture, the storyteller scores
+	     * 0, and each of the other players scores 2. Otherwise the storyteller and
+	     * all players who found the correct answer score 3
+	     */
+	    if (winners.length === 0 || winners.length === (playerStore.get().length - 1)) {
+	      playerStore.get().forEach((p)=>{
+	        if (p === storyteller){
+	        	p.score += 2;
+	        };	        
+	      });
+	    }else{
+	      storyteller.score += 3;
+	      winners.forEach((p)=>{
+	      	 p.score +=3;
+	      });       
+	    }
+  }
 }
 
 export default new PartyManager();

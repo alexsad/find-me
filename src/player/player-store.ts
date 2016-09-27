@@ -25,6 +25,8 @@ class PlayerStore{
 			p_player.deck = cardStore.getDeckCards();
 			p_player.color = this.getColor();
 			this.players.push(p_player);
+		}else{
+			this.getById(p_player.id).name = p_player.name;
 		}
 		this.onChange.emit(null);
 	}

@@ -1,7 +1,12 @@
 import playerStore from "../player/player-store";
 import partyManager from "../party/party-manager";
 import {IPlayer} from "../player/i-player";
+import {EPlayerStatus} from "../player/e-player";
 import {ICard} from "../card/i-card";
+
+let processed:boolean = false;
+
+
 
 partyManager.onReady.once(()=>{
 	//so pode iniciar depois de ler as cartas
@@ -39,20 +44,35 @@ partyManager.onReady.once(()=>{
 	playerStore.add(player3);
 
 	partyManager.storytellerId = player1.id;
+	player1.status = EPlayerStatus.PICKING;
 
-	partyManager.pickCard(player1.id,player1.deck[2].id);
+	let player1IdCard:number = player1.deck[2].id;
+	let player2IdCard:number = player2.deck[1].id;
+	let player3IdCard:number = player3.deck[4].id;
+
+	partyManager.pickCard(player1.id,player1IdCard);
+
+	partyManager.discardCard(player2.id,player2IdCard);
+	partyManager.discardCard(player3.id,player3IdCard);
 
 
-	partyManager.discardCard(player2.id,player2.deck[2].id);
-	partyManager.discardCard(player3.id,player3.deck[2].id);
+	partyManager.betCard(player2.id,player1IdCard);
+	partyManager.betCard(player3.id,player2IdCard);
 
-
-
+	processed=true;
+	partyManager.onUpdate.emit(null); 
 });
 
 partyManager.onUpdate.subscribe(()=>{
-	console.log(playerStore.get()); 
+	if(processed){
+		console.log(playerStore.get()); 
+	}
 });
 
-partyManager.onCardsBet.subscribe((cards:ICard[])=>console.log(cards));
+partyManager.onCardsBet.subscribe((cards:ICard[])=>{
+	console.log('cards to select!');
+	console.log(cards);
+
+
+});
 
