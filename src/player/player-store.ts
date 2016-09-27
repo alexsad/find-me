@@ -52,5 +52,9 @@ class PlayerStore{
 		}
   		return color;
 	}
+	public set(players:IPlayer[]):void{
+		this.players = players;
+		this.onChange.emit(null);
+	}
 }
 export default new PlayerStore();

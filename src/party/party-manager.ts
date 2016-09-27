@@ -9,6 +9,7 @@ class PartyManager{
 	public onReady:EventEmitter<boolean> = new EventEmitter();
 	public onUpdate:EventEmitter<any>=new EventEmitter();
 	public onCardsBet:EventEmitter<ICard[]>=new EventEmitter();
+	public onGameOver: EventEmitter<IPlayer> = new EventEmitter();
 	public storytellerId:string;
 	constructor(){
 		this.storytellerId = "";
@@ -39,7 +40,7 @@ class PartyManager{
 		if(player.status===EPlayerStatus.BETING){
 		    player.pickedBet = cardId;
 		    console.log(`${player.name} has bet card ${cardId}`);
-		    player.status = EPlayerStatus.WAITING;
+		    player.status = EPlayerStatus.WATCHING_BET;
 		    this.doDiscard(cardId,player);
 
 		    let hasInBet:boolean = playerStore
@@ -72,6 +73,12 @@ class PartyManager{
 				playerStore.get().forEach((p)=>{
 					p.deck.push(cardStore.getNewCard());
 				});
+
+				//verifica se existe vencendor
+				let winner: IPlayer[] = playerStore.get().filter(p=>p.score >= 30);
+				if(winner.length){
+					this.onGameOver.emit(winner[0]);
+				}
 			}
 
 		}
@@ -86,7 +93,10 @@ class PartyManager{
 		    player.status = EPlayerStatus.WAITING;
 		    this.doDiscard(cardId,player);
 
-		    let allPlayerDiscarded:boolean = playerStore.get().every((playerToDiscard)=>playerToDiscard.status===EPlayerStatus.WAITING);
+			let allPlayerDiscarded: boolean = playerStore
+				.get()
+				.filter(playerDiscarding => playerDiscarding.id !== this.storytellerId)
+				.every(playerDiscarding => playerDiscarding.status === EPlayerStatus.WAITING);
 		    //console.log(allPlayerDiscarded);
 		    if(allPlayerDiscarded){
 		    	//every player has discarded
@@ -114,6 +124,19 @@ class PartyManager{
 	    }
     	return cards;
 	}
+	public reset():void{
+		let players = playerStore.get();
+		players.forEach(player=> {
+			player.deck = [];
+			player.score = 0;
+			player.status = EPlayerStatus.WAITING;
+		});
+		if(players.length){
+			players[0].status = EPlayerStatus.PICKING;
+			this.storytellerId = players[0].id;
+		}
+		playerStore.set(players);
+	}
 	//narrador escolhendo uma carta
 	public pickCard(playerId:string,cardId:number):void{
 	    let player = playerStore.getById(playerId);
@@ -128,7 +151,7 @@ class PartyManager{
 		      		.filter((p)=>p.id !== player.id)
 		      		.forEach(p=>p.status = EPlayerStatus.DISCARDING);
 		    }
-		    player.status = EPlayerStatus.WAITING;
+		    player.status = EPlayerStatus.WATCHING_BET;
 		    this.doDiscard(cardId,player);
 		}
 	    this.onUpdate.emit(null);

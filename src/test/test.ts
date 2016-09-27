@@ -38,10 +38,9 @@ partyManager.onReady.once(()=>{
 		,deck:[]
 	};
 
-
-	playerStore.add(player1);
-	playerStore.add(player2);
-	playerStore.add(player3);
+	partyManager.join(player1);
+	partyManager.join(player2);
+	partyManager.join(player3);
 
 	partyManager.storytellerId = player1.id;
 	player1.status = EPlayerStatus.PICKING;
@@ -54,6 +53,7 @@ partyManager.onReady.once(()=>{
 
 	partyManager.discardCard(player2.id,player2IdCard);
 	partyManager.discardCard(player3.id,player3IdCard);
+
 
 
 	partyManager.betCard(player2.id,player1IdCard);
@@ -72,7 +72,5 @@ partyManager.onUpdate.subscribe(()=>{
 partyManager.onCardsBet.subscribe((cards:ICard[])=>{
 	console.log('cards to select!');
 	console.log(cards);
-
-
 });
 

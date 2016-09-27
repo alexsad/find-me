@@ -18,9 +18,12 @@ app.get('/reset', function (req, res) {
   res.send("reset done!");
 });
 
-io.on('connection',(socket)=>{
+io.on('connection',(socket)=>{  
+
+  partyManager.default.onGameOver.subscribe((winner)=>{
+    io.emit('gameover', winner);
+  });
   partyManager.default.onCardsBet.subscribe((cards)=>{
-    console.log(`the cards is in bet!`);
     io.emit('cards-bet', cards);
   });
   partyManager.default.onUpdate.subscribe(()=>{
