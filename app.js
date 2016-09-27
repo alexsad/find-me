@@ -18,17 +18,19 @@ app.get('/reset', function (req, res) {
   res.send("reset done!");
 });
 
-io.on('connection',(socket)=>{  
+partyManager.default.onGameOver.subscribe((winner)=>{
+  io.emit('gameover', winner);
+});
+partyManager.default.onCardsBet.subscribe((cards)=>{
+  console.log('send cards to bet!');
+  io.emit('cards-bet', cards);
+});
+partyManager.default.onUpdate.subscribe(()=>{
+  console.log('update all players!');
+  io.emit('update-all', playerStore.default.get());
+});
 
-  partyManager.default.onGameOver.subscribe((winner)=>{
-    io.emit('gameover', winner);
-  });
-  partyManager.default.onCardsBet.subscribe((cards)=>{
-    io.emit('cards-bet', cards);
-  });
-  partyManager.default.onUpdate.subscribe(()=>{
-    io.emit('update-all', playerStore.default.get());
-  });
+io.on('connection',(socket)=>{  
   socket.on('join',(playerId,playerName)=>{
     partyManager.default.join({
       id:playerId
@@ -45,6 +47,9 @@ io.on('connection',(socket)=>{
   });
   socket.on('discard-card', function(playerId,cardId) { 
     partyManager.default.discardCard(playerId,cardId); 
+  });
+  socket.on('rename-player', function(playerId,newName) { 
+    partyManager.default.renamePlayer({id:playerId,name:newName}); 
   });
 });
 

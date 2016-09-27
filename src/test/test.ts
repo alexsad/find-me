@@ -42,8 +42,8 @@ partyManager.onReady.once(()=>{
 	partyManager.join(player2);
 	partyManager.join(player3);
 
-	partyManager.storytellerId = player1.id;
-	player1.status = EPlayerStatus.PICKING;
+	//partyManager.storytellerId = player1.id;
+	//player1.status = EPlayerStatus.PICKING;
 
 	let player1IdCard:number = player1.deck[2].id;
 	let player2IdCard:number = player2.deck[1].id;

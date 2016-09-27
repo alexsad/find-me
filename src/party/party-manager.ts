@@ -11,11 +11,20 @@ class PartyManager{
 	public onCardsBet:EventEmitter<ICard[]>=new EventEmitter();
 	public onGameOver: EventEmitter<IPlayer> = new EventEmitter();
 	public storytellerId:string;
+	private cardsInBet:ICard[];
 	constructor(){
 		this.storytellerId = "";
+		this.cardsInBet = [];
 		cardStore.onChange.once(()=>{
 			this.onReady.emit(true);
 		});
+
+	}
+
+	public renamePlayer(player:IPlayer):void{
+		console.log(`player ${player.id} has renamed to ${player.name}!`);
+		let playerFromStore:IPlayer = playerStore.getById(player.id);
+		playerFromStore.name = player.name;
 	}
 
 	public join(player:IPlayer):void{
@@ -29,9 +38,15 @@ class PartyManager{
 			this.storytellerId = player.id;
 		}
 
-		playerStore.add(player);
+		playerStore.add(player); 	
+
 		console.log(`player ${player.name} has connected!`);
 		this.onUpdate.emit(null);
+
+		let playerFromStore:IPlayer = playerStore.getById(player.id);
+		if(playerFromStore.status===EPlayerStatus.BETING||playerFromStore.status===EPlayerStatus.WATCHING_BET){
+			this.onCardsBet.emit(this.cardsInBet);
+		}
 	}
 
 	//apostando
@@ -110,7 +125,8 @@ class PartyManager{
 		    			};	    			
 		    			betCards.push(playerReady.pickedCard);
 		    		});
-		    	this.onCardsBet.emit(this.shuffleCards(cardStore.get().filter((card)=> betCards.indexOf(card.id) > -1 )));
+		    	this.cardsInBet = this.shuffleCards(cardStore.get().filter((card)=> betCards.indexOf(card.id) > -1 ));
+		    	this.onCardsBet.emit(this.cardsInBet);
 		    }
 	    }
 		this.onUpdate.emit(null);
@@ -136,6 +152,7 @@ class PartyManager{
 			this.storytellerId = players[0].id;
 		}
 		playerStore.set(players);
+		this.cardsInBet = [];
 	}
 	//narrador escolhendo uma carta
 	public pickCard(playerId:string,cardId:number):void{
