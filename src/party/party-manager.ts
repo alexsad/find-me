@@ -77,7 +77,7 @@ class PartyManager{
 						nextIndex=indx+1;
 						return p.id===this.storytellerId;
 					});
-				if(nextIndex===playerStore.get().length-1){
+				if(nextIndex===playerStore.get().length){
 					nextIndex=0;
 				};
 				this.storytellerId = playerStore.get()[nextIndex].id;

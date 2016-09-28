@@ -63,6 +63,20 @@ partyManager.onReady.once(()=>{
 	partyManager.betCard(player2.id,player1IdCard);
 	partyManager.betCard(player3.id,player2IdCard);
 
+
+	player1IdCard = player1.deck[2].id;
+	player2IdCard = player2.deck[1].id;
+	player3IdCard = player3.deck[4].id;
+
+	partyManager.pickCard(player2.id, player2IdCard);
+
+	partyManager.discardCard(player1.id, player1IdCard);
+	partyManager.discardCard(player3.id, player3IdCard);
+
+	partyManager.betCard(player1.id, player3IdCard);
+	partyManager.betCard(player3.id, player2IdCard);
+
+
 	processed=true;
 	partyManager.onUpdate.emit(null); 
 });
