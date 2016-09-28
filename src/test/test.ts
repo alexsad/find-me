@@ -52,6 +52,10 @@ partyManager.onReady.once(()=>{
 	partyManager.pickCard(player1.id,player1IdCard);
 
 	partyManager.discardCard(player2.id,player2IdCard);
+
+	//player3.name = "novo 3";
+	partyManager.renamePlayer(<any>{id:player3.id,name:"ops 3"});
+
 	partyManager.discardCard(player3.id,player3IdCard);
 
 
