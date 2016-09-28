@@ -83,12 +83,12 @@ partyManager.onReady.once(()=>{
 
 partyManager.onUpdate.subscribe(()=>{
 	if(processed){
-		console.log(playerStore.get()); 
+		//console.log(playerStore.get()); 
 	}
 });
 
 partyManager.onCardsBet.subscribe((cards:ICard[])=>{
 	console.log('cards to select!');
-	console.log(cards);
+	//console.log(cards);
 });
 

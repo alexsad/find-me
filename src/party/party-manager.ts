@@ -232,6 +232,18 @@ class PartyManager{
 	      	 p.score +=3;
 	      });       
 	    }
+
+		playerStore.get().map(player=>{
+			return {
+				id:player.id
+				,name:player.name
+				, pickedCard: player.pickedCard
+				
+			};
+		}).forEach(bet=>{
+			console.log(bet);
+		});
+
   }
 }
 
