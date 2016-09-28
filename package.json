@@ -1,7 +1,7 @@
 {
-  "name": "find-me",
+  "name": "guessit-backend",
   "version": "0.0.0",
-  "description": "a simple game made with Ferrugemjs",
+  "description": "",
   "main": false,
   "scripts": {
     "jspm": "./node_modules/.bin/jspm",
