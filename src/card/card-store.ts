@@ -37,15 +37,26 @@ class CardStore{
 		});
 		return this;
 	}
+	public getById(id:number):ICard{
+		let indx:number = 0;
+		this.cards.some((card,index)=>{
+			if(card.id===id){
+				indx = index;
+				return true;
+			}
+			return false;
+		});
+		return this.cards[indx];
+	}
+	public get():ICard[]{
+		return this.cards;
+	}
 	public getDeckCards():ICard[]{
 		let myRandomCards:ICard[] = [];
 		for(let i=0;i<6;i++){
 			myRandomCards.push(this.getNewCard());
 		}		
 		return myRandomCards;
-	}
-	public get():ICard[]{
-		return this.cards;
 	}
 }
 export default new CardStore();

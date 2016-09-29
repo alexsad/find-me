@@ -3,6 +3,7 @@ import partyManager from "../party/party-manager";
 import {IPlayer} from "../player/i-player";
 import {EPlayerStatus} from "../player/e-player";
 import {ICard} from "../card/i-card";
+import {IBet} from "../party/i-party-manager";
 
 let processed:boolean = false;
 
@@ -61,7 +62,7 @@ partyManager.onReady.once(()=>{
 
 
 	partyManager.betCard(player2.id,player1IdCard);
-	partyManager.betCard(player3.id,player2IdCard);
+	partyManager.betCard(player3.id,player1IdCard);
 
 
 	player1IdCard = player1.deck[2].id;
@@ -90,5 +91,9 @@ partyManager.onUpdate.subscribe(()=>{
 partyManager.onCardsBet.subscribe((cards:ICard[])=>{
 	console.log('cards to select!');
 	//console.log(cards);
+});
+partyManager.onBetsReveled.subscribe((bets:IBet[])=>{
+	console.log('bets reveled!');
+	console.log(bets);
 });
 
